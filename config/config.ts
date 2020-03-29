@@ -200,6 +200,8 @@ export default {
       return localName;
     },
   },
+  base: '/tracker/',
+  publicPath: '/tracker/',
   manifest: {
     basePath: '/',
   },

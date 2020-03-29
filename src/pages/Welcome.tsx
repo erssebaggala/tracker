@@ -20,7 +20,11 @@ import {
 	FiShare2, 
 	FiDatabase,
 	FiFilter	} from "react-icons/fi";
-	
+import { LOCATIONS } from './locations';
+import { connect } from 'dva';
+import 'leaflet-contextmenu'
+import 'leaflet-contextmenu/dist/leaflet.contextmenu.css'
+
 //Fix icons
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -60,52 +64,63 @@ const DUMMY_LOCATIONS = [
 ];
 
 const color = '#3388ff'	;
-const radius= 1000;
+const radius= 100;
 
-const locations = DUMMY_LOCATIONS.map( (v, i) => (
-<React.Fragment key={i}>
-	<Circle 
-		color={color}
-		fill={true}
-		center={[v.latitude, v.longitude]}
-		radius={radius}>
-	</Circle>
-</React.Fragment>
-));
+//const locations = LOCATIONS.map( (v, i) => (
+//<React.Fragment key={i}>
+//	<Circle 
+//		color={color}
+//		fill={true}
+//		center={[v.latitude, v.longitude]}
+//		radius={radius}>
+//	</Circle>
+//</React.Fragment>
+//));
+//
+const connectingLines = LOCATIONS.map( (v, i) => { 
+const nextLocation  = (i === LOCATIONS.length -1) ? LOCATIONS[i-1] : LOCATIONS[i+1];
 
-const connectingLines = DUMMY_LOCATIONS.map( (v, i) => { 
-const nextLocation  = (i === DUMMY_LOCATIONS.length -1) ? DUMMY_LOCATIONS[i-1] : DUMMY_LOCATIONS[i+1];
+//console.log("nextLocation:", [
+//			[v.latitude, v.longitude], 
+//			[nextLocation.latitude, nextLocation.longitude]
+//		]);
 
-console.log("nextLocation:", [
-			[v.latitude, v.longitude], 
-			[nextLocation.latitude, nextLocation.longitude]
-		]);
-
-return 
-(<React.Fragment key={i}>
-	<Polyline 
-		color="red"
-		positions={[
-			[v.latitude, v.longitude], 
-			[nextLocation.latitude, nextLocation.longitude]
-		]}
-		>
-	</Polyline>
-</React.Fragment>);
+	return 
+		(<React.Fragment key={i}>
+			<Polyline 
+			
+				contextmenu={true}
+				contextmenuItems={[{
+					text: 'Show closest phones'
+				}]}
+				color="red"
+				positions={[
+					[v.latitude, v.longitude], 
+					[nextLocation.latitude, nextLocation.longitude]
+				]}
+				>
+			</Polyline>
+		</React.Fragment>);
 
 });
 
 
-const connectingPoints = DUMMY_LOCATIONS.map( v => [v.latitude, v.longitude] );
+const connectingPoints = LOCATIONS.map( v => [v.latitude, v.longitude] );
+const TEST_NUMBER = '0779089303';
 
+const Welcome: React.FC = props => {
 
-export default (): React.ReactNode => {
-
+	const { paths } = props;
+	
 	const [ latitude, setLatitude] = useState<float>(0.347596);
 	const [ longitude, setLongitude] = useState<float>(32.582520);
 	const [ center, setCenter] = useState<float>([0.347596, 32.582520]);
 	const [ zoom, setZoom] = useState<integer>(13);
 	const [ height, setHeight] = useState<integer>(window.innerHeight-150);
+	
+	const [ phonePath, setPhonePath] = useState<Any>([]);
+	const [ phoneNumber, setPhoneNumber] = useState<string>("");
+	
 	
 	const [ sideBarCollapsed, setSideBarCollapsed] = useState<boolean>(true);
 	const [ selectedTab, setSelectedTab] = useState<boolean>('search');
@@ -120,7 +135,9 @@ export default (): React.ReactNode => {
 		setSideBarCollapsed(true);
 	}
 	
-	console.log("height:", height);
+	const updatePath = (value) => {
+		
+	}
 	
 	return (
 	  <>
@@ -138,9 +155,22 @@ export default (): React.ReactNode => {
 				  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 				/>
 				
-				{locations}
+				{
+					//Line path
+					phoneNumber === TEST_NUMBER ? LOCATIONS.map( (v, i) => (
+					<React.Fragment key={i}>
+						<Circle 
+							color={color}
+							fill={true}
+							center={[v.latitude, v.longitude]}
+							radius={radius}>
+						</Circle>
+					</React.Fragment>
+					)) 
+					: ""
+				}
 				
-				{connectingLines}
+				{ phoneNumber === TEST_NUMBER ? connectingLines : "" }
 				
 	<Polyline 
 		color="red"
@@ -161,10 +191,14 @@ export default (): React.ReactNode => {
 							<Tab id="search" header="Search" icon={<FiFilter />}>
 								<div style={{marginTop: 5}}>
 									<Search
-										  placeholder="Enter phone number"
-										  onSearch={value => console.log(value)}
-										  style={{ width: "100%" }}
-										/>
+										  placeholder="Test number is 0779089303"
+										  enterButton="Search"
+										  size="large"
+										  onSearch={value => setPhoneNumber(value)}
+									 />
+									<div>
+									
+									</div>
 								</div>
 							</Tab>
 
@@ -176,3 +210,10 @@ export default (): React.ReactNode => {
 	  </>
 	);
 };
+
+
+export default connect( ({tracker}) => {
+	return {
+		paths: tracker.paths || []
+	}
+})(Welcome);

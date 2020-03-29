@@ -55,7 +55,7 @@ export default {
   menu: {
     locale: true,
   },
-  title: 'CriminalTracker',
+  title: 'PhoneTracker',
   pwa: false,
   iconfontUrl: '',
 } as DefaultSettings;
